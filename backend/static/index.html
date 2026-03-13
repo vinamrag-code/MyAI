@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f7f7f8;
+            --bg-assistant: #f0f0f0;
+            --text-primary: #1e1e1e;
+            --text-secondary: #6c757d;
+            --accent: #10a37f;
+            --border: #e5e5e5;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-primary: #1a1a1a;
+                --bg-secondary: #2d2d2d;
+                --bg-assistant: #2a2a2a;
+                --text-primary: #ffffff;
+                --text-secondary: #9ca3af;
+                --accent: #10a37f;
+                --border: #404040;
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #10a37f, #1a8cff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+
+        .mode-switch {
+            display: inline-flex;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            padding: 4px;
+        }
+
+        .mode-btn {
+            padding: 12px 32px;
+            border: none;
+            background: transparent;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+
+        .mode-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .chat-container {
+            flex: 1;
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            overflow-y: auto;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .messages {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .message {
+            display: flex;
+            flex-direction: column;
+            max-width: 85%;
+        }
+
+        .message.user {
+            align-self: flex-end;
+        }
+
+        .message.assistant {
+            align-self: flex-start;
+        }
+
+        .message-content {
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .user .message-content {
+            background: var(--accent);
+            color: white;
+        }
+
+        .assistant .message-content {
+            background: var(--bg-assistant);
+            color: var(--text-primary);
+        }
+
+        .assistant .message-content a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .assistant .message-content a:hover {
+            text-decoration: underline;
+        }
+
+        .assistant .message-content pre {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            padding: 12px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 8px 0;
+        }
+
+        .timestamp {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin: 4px 8px;
+        }
+
+        .input-area {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .input-wrapper textarea {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: none;
+            min-height: 50px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .input-wrapper textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .send-btn {
+            padding: 12px 24px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            height: fit-content;
+            transition: opacity 0.2s;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            opacity: 0.9;
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .user-info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 8px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            font-size: 0.9rem;
+        }
+
+        .new-chat-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .new-chat-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        .welcome-screen {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .welcome-screen h2 {
+            font-size: 2rem;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .welcome-screen p {
+            font-size: 1.1rem;
+            margin-bottom: 24px;
+        }
+
+        .suggestions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .suggestion-chip {
+            padding: 10px 20px;
+            background: var(--bg-assistant);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .suggestion-chip:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        .best-answer {
+            background: linear-gradient(135deg, rgba(16, 163, 127, 0.1), rgba(26, 140, 255, 0.1));
+            border-left: 4px solid var(--accent);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .best-answer h4 {
+            color: var(--accent);
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .best-answer p {
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .search-result {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.2s;
+        }
+
+        .search-result:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .search-result h3 {
+            margin-bottom: 5px;
+            font-size: 1.1rem;
+        }
+
+        .search-result h3 a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .search-result h3 a:hover {
+            text-decoration: underline;
+        }
+
+        .search-url {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+            word-break: break-all;
+        }
+
+        .loading {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+            background: var(--bg-assistant);
+            border-radius: 18px;
+            width: fit-content;
+        }
+
+        .loading span {
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .loading span:nth-child(1) { animation-delay: -0.32s; }
+        .loading span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        .error-message {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid #ff4444;
+            color: #ff4444;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .mode-indicator {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            margin-left: 8px;
+            background: var(--accent);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="user-info" id="userId">Loading...</div>
+    <button class="new-chat-btn" onclick="clearCurrentModeChat()">+ New Chat</button>
+    
+    <div class="app-container">
+        <div class="header">
+            <h1>MyAI</h1>
+            <div class="mode-switch">
+                <button class="mode-btn active" onclick="switchMode('ai')" id="mode-ai">🤖 AI Query</button>
+                <button class="mode-btn" onclick="switchMode('web')" id="mode-web">🌐 Web Search</button>
+            </div>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="messages" id="messages">
+                <!-- Messages will be loaded here -->
+            </div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-wrapper">
+                <textarea 
+                    id="userInput" 
+                    placeholder="Ask AI anything... (Shift+Enter for new line)" 
+                    rows="1"
+                    oninput="autoResize(this)"
+                    onkeydown="handleKeyDown(event)"
+                ></textarea>
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            API_URL: window.location.origin,
+            APP_NAME: 'MyAI'
+        };
+
+        // State management
+        let currentMode = 'ai'; // 'ai' or 'web'
+        let isLoading = false;
+        let USER_ID = localStorage.getItem('myai_user_id') || Math.floor(Math.random() * 1000000) + 1;
+        
+        // Store messages separately for each mode
+        let messages = {
+            ai: [],
+            web: []
+        };
+
+        localStorage.setItem('myai_user_id', USER_ID);
+        document.getElementById('userId').textContent = `User ID: ${USER_ID}`;
+
+        // Load messages from localStorage on startup
+        function loadMessages() {
+            try {
+                const savedAI = localStorage.getItem('myai_ai_messages');
+                const savedWeb = localStorage.getItem('myai_web_messages');
+                
+                if (savedAI) messages.ai = JSON.parse(savedAI);
+                if (savedWeb) messages.web = JSON.parse(savedWeb);
+            } catch (e) {
+                console.error('Error loading messages:', e);
+            }
+        }
+
+        // Save messages to localStorage
+        function saveMessages() {
+            try {
+                localStorage.setItem('myai_ai_messages', JSON.stringify(messages.ai));
+                localStorage.setItem('myai_web_messages', JSON.stringify(messages.web));
+            } catch (e) {
+                console.error('Error saving messages:', e);
+            }
+        }
+
+        // Display messages for current mode
+        function displayCurrentModeMessages() {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = '';
+            
+            if (messages[currentMode].length === 0) {
+                // Show welcome screen if no messages
+                if (currentMode === 'ai') {
+                    messagesDiv.innerHTML = `
+                        <div class="welcome-screen">
+                            <h2>AI Assistant</h2>
+                            <p>Ask me anything - I have memory and context!</p>
+                            <div class="suggestions">
+                                <span class="suggestion-chip" onclick="useSuggestion('What is artificial intelligence?')">What is AI?</span>
+                                <span class="suggestion-chip" onclick="useSuggestion('Tell me a joke')">Tell me a joke</span>
+                                <span class="suggestion-chip" onclick="useSuggestion('How to learn Python?')">Learn Python</span>
+                                <span class="suggestion-chip" onclick="useSuggestion('Explain quantum computing')">Quantum computing</span>
+                                <span class="suggestion-chip" onclick="useSuggestion('Write a poem')">Write a poem</span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    messagesDiv.innerHTML = `
+                        <div class="welcome-screen">
+                            <h2>Web Search</h2>
+                            <p>Search the web for latest information</p>
+                            <div class="suggestions">
+                                <span class="suggestion-chip" onclick="useSuggestion('Latest technology news')">Tech news</span>
+                                <span class="suggestion-chip" onclick="useSuggestion('Who won the last world cup?')">World cup winner</span>
+                                <span class="suggestion-chip" onclick="useSuggestion('Best programming languages 2025')">Best programming languages</span>
+                                <span class="suggestion-chip" onclick="useSuggestion('Space exploration updates')">Space news</span>
+                                <span class="suggestion-chip" onclick="useSuggestion('Weather in London')">Weather</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            } else {
+                // Display all messages for current mode
+                messages[currentMode].forEach(msg => {
+                    const messageDiv = createMessageElement(msg.role, msg.content, new Date(msg.timestamp));
+                    messagesDiv.appendChild(messageDiv);
+                });
+            }
+            
+            // Update input placeholder
+            const input = document.getElementById('userInput');
+            input.placeholder = currentMode === 'ai' 
+                ? 'Ask AI anything... (Shift+Enter for new line)' 
+                : 'Search the web... (Shift+Enter for new line)';
+                
+            scrollToBottom();
+        }
+
+        // Create message element without adding to DOM
+        function createMessageElement(role, content, timestamp) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            
+            const timeStr = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            let contentHtml = '';
+            
+            if (role === 'assistant' && currentMode === 'web' && typeof content === 'object') {
+                // Web search results
+                if (content.answer) {
+                    contentHtml += `
+                        <div class="best-answer">
+                            <h4>📌 Best Answer</h4>
+                            <p>${escapeHtml(content.answer.answer)}</p>
+                            <div class="best-answer-meta" style="font-size:0.8rem; color:var(--text-secondary);">
+                                Source: ${escapeHtml(content.answer.source)} | 
+                                Confidence: ${content.answer.confidence}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                if (content.results && content.results.length > 0) {
+                    content.results.forEach(result => {
+                        contentHtml += `
+                            <div class="search-result">
+                                <h3><a href="${escapeHtml(result.url)}" target="_blank">${escapeHtml(result.title)}</a></h3>
+                                <div class="search-url">${escapeHtml(result.url)}</div>
+                                <div class="search-snippet">${escapeHtml(result.content)}</div>
+                                ${result.published ? `<div class="timestamp">📅 ${new Date(result.published).toLocaleDateString()}</div>` : ''}
+                            </div>
+                        `;
+                    });
+                } else {
+                    contentHtml = '<p>No results found.</p>';
+                }
+            } else {
+                // Regular message (AI response)
+                contentHtml = formatMessage(content);
+            }
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">${contentHtml}</div>
+                <div class="timestamp">${timeStr}</div>
+            `;
+            
+            return messageDiv;
+        }
+
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = (textarea.scrollHeight) + 'px';
+        }
+
+        function handleKeyDown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+            
+            // Update active button
+            document.getElementById('mode-ai').classList.toggle('active', mode === 'ai');
+            document.getElementById('mode-web').classList.toggle('active', mode === 'web');
+            
+            // Display messages for the new mode
+            displayCurrentModeMessages();
+        }
+
+        function useSuggestion(text) {
+            document.getElementById('userInput').value = text;
+            autoResize(document.getElementById('userInput'));
+            sendMessage();
+        }
+
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function formatMessage(text) {
+            if (!text) return '';
+            text = escapeHtml(text);
+            text = text.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+            text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+            text = text.replace(/\n/g, '<br>');
+            return text;
+        }
+
+        function addMessage(role, content, timestamp = new Date()) {
+            const messagesDiv = document.getElementById('messages');
+            
+            // Remove welcome screen if it exists
+            const welcomeScreen = messagesDiv.querySelector('.welcome-screen');
+            if (welcomeScreen) welcomeScreen.remove();
+            
+            // Create and add message element
+            const messageDiv = createMessageElement(role, content, timestamp);
+            messagesDiv.appendChild(messageDiv);
+            scrollToBottom();
+            
+            // Store message
+            const messageObj = {
+                role,
+                content: typeof content === 'object' ? content : content,
+                timestamp: timestamp.toISOString()
+            };
+            messages[currentMode].push(messageObj);
+            
+            // Save to localStorage
+            saveMessages();
+        }
+
+        function showLoading() {
+            const messagesDiv = document.getElementById('messages');
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message assistant';
+            loadingDiv.id = 'loadingIndicator';
+            loadingDiv.innerHTML = `
+                <div class="loading">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            `;
+            messagesDiv.appendChild(loadingDiv);
+            scrollToBottom();
+        }
+
+        function hideLoading() {
+            const loading = document.getElementById('loadingIndicator');
+            if (loading) loading.remove();
+        }
+
+        function scrollToBottom() {
+            const container = document.getElementById('chatContainer');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function showError(message) {
+            const messagesDiv = document.getElementById('messages');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = message;
+            messagesDiv.appendChild(errorDiv);
+            scrollToBottom();
+        }
+
+        function clearCurrentModeChat() {
+            // Clear messages for current mode
+            messages[currentMode] = [];
+            
+            // Save to localStorage
+            saveMessages();
+            
+            // Refresh display
+            displayCurrentModeMessages();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            
+            if (!message || isLoading) return;
+            
+            // Clear input
+            input.value = '';
+            autoResize(input);
+            
+            // Add user message
+            addMessage('user', message);
+            
+            // Show loading
+            isLoading = true;
+            document.getElementById('sendBtn').disabled = true;
+            showLoading();
+            
+            try {
+                if (currentMode === 'ai') {
+                    // AI Chat
+                    const response = await fetch(`${CONFIG.API_URL}/api/chat`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            user_id: parseInt(USER_ID), 
+                            message: message 
+                        })
+                    });
+                    
+                    if (!response.ok) throw new Error('API request failed');
+                    
+                    const data = await response.json();
+                    addMessage('assistant', data.response);
+                    
+                } else {
+                    // Web Search
+                    const response = await fetch(`${CONFIG.API_URL}/search?q=${encodeURIComponent(message)}&max_results=10`);
+                    
+                    if (!response.ok) throw new Error('Search failed');
+                    
+                    const data = await response.json();
+                    addMessage('assistant', data);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('An error occurred. Please try again.');
+            } finally {
+                hideLoading();
+                isLoading = false;
+                document.getElementById('sendBtn').disabled = false;
+            }
+        }
+
+        // Initialize
+        loadMessages();
+        displayCurrentModeMessages();
+
+        // Check server connection
+        fetch(`${CONFIG.API_URL}/health`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Connected to MyAI server:', data);
+            })
+            .catch(() => {
+                showError('⚠️ Cannot connect to server. Make sure it\'s running on port 8000.');
+            });
+    </script>
+</body>
+</html>
