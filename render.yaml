@@ -2,8 +2,15 @@ services:
   - type: web
     name: myai
     runtime: python
+    repo: https://github.com/vinamrag-code/MyAI
+    branch: ai-search
     build:
-      pythonVersion: 3.11.11
+      pythonVersion: 3.11
       commands:
-        - poetry install
-    start: poetry run uvicorn main:app --host 0.0.0.0 --port $PORT
+        - pip install --upgrade pip
+        - pip install wheel
+        - pip install -r requirements.txt
+    start: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
