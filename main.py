@@ -132,6 +132,23 @@ async def get_stats():
         "ai_stats": ai_client.get_stats()
     }
 
+@app.get("/api/models", tags=["AI Chat"])
+def list_models():
+    """List available AI models for the chat."""
+    models = []
+    for i, m in enumerate(ai_client.models):
+        model_id = f"{m.provider}:{m.model_name}"
+        display_name = m.model_name.split("/")[-1] if "/" in m.model_name else m.model_name
+        models.append({
+            "id": model_id,
+            "index": i,
+            "provider": m.provider,
+            "model_name": m.model_name,
+            "display_name": display_name,
+            "is_free": m.is_free,
+        })
+    return {"models": models}
+
 # ── Pydantic models ────────────────────────────────────────────────────────────
 
 class SearchRequest(BaseModel):
@@ -157,6 +174,7 @@ class ChatRequest(BaseModel):
     user_id: int
     message: str
     ocr_context: Optional[str] = None
+    model_id: Optional[str] = None  # e.g. "openrouter:meta-llama/llama-3.3-70b-instruct:free"
 
 class ChatResponse(BaseModel):
     response: str
@@ -215,7 +233,8 @@ async def ai_chat(request: ChatRequest):
         response = await ai_client.chat_with_memory(
             user_id=request.user_id,
             user_message=request.message,
-            ocr_context=request.ocr_context
+            ocr_context=request.ocr_context,
+            model_id=request.model_id
         )
         
         return ChatResponse(

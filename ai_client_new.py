@@ -114,34 +114,47 @@ class AIClient:
         user_id: int,
         user_message: str,
         ocr_context: Optional[str] = None,
+        model_id: Optional[str] = None,
     ) -> str:
         messages = self.build_messages(user_id, user_message, ocr_context)
 
         response = await self.chat_completion(
             messages=messages,
-            user_id=user_id
+            user_id=user_id,
+            model_id=model_id,
         )
 
         self.add_to_conversation(user_id, "user", user_message)
         self.add_to_conversation(user_id, "assistant", response)
         return response
 
+    def _get_models_order(self, model_id: Optional[str] = None) -> List[AIModel]:
+        """Return models to try: selected first (if any), then the rest."""
+        if not model_id or not self.models:
+            return list(self.models)
+        model_key = model_id.strip()
+        selected = [m for m in self.models if f"{m.provider}:{m.model_name}" == model_key]
+        others = [m for m in self.models if f"{m.provider}:{m.model_name}" != model_key]
+        return selected + others
+
     async def chat_completion(
         self,
         messages: List[Dict[str, str]],
         user_id: Optional[int] = None,
+        model_id: Optional[str] = None,
     ) -> str:
         if not self.models:
             raise RuntimeError("No available models configured")
 
-        total_models = len(self.models)
-        logger.info("Starting model fallback chain", total_models=total_models)
+        models_to_try = self._get_models_order(model_id)
+        total_models = len(models_to_try)
+        logger.info("Starting model fallback chain", total_models=total_models, model_id=model_id)
 
         attempt_count = 0
         last_error: Optional[Exception] = None
         failed_models: List[Dict[str, str]] = []
 
-        for model in self.models:
+        for model in models_to_try:
             attempt_count += 1
 
             # Check if model is in cooldown
