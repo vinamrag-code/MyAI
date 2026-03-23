@@ -6,7 +6,7 @@ MyAI is an advanced personal AI assistant that combines conversational AI capabi
 ✨ Key Features
 
 🧠 Multi-Model AI Chat: Utilizes a fallback system across multiple free AI models (OpenRouter, Hermes, etc.) to ensure high availability and reliability
-🔍 Web Search Integration: Real-time search using SearXNG backend with smart filtering and answer extraction
+🔍 Web Search Integration: Real-time searchNG backend with smart filtering and answer extraction
 💾 Conversational Memory: Maintains conversation history per user with configurable timeout and length limits
 🎯 Smart Answer Filtering: Ranks and extracts the most relevant answers from search results
 📷 OCR Context Support: Allows users to provide image text context for enhanced responses
@@ -34,7 +34,7 @@ MyAI is an advanced personal AI assistant that combines conversational AI capabi
 
 📥 Clone the repository
 git clone https://github.com/vinamrag-code/MyAI.git
-cd MyAi
+cd MyAI
 
 📦 Install dependencies
 pip install -r requirements.txt
@@ -255,7 +255,7 @@ If MyAI helped you, please consider:
 
 📄 Future Enhancements
 
-🗄️ Database persistence for conversation history
+🗄 conversation history
 🔒 Rate limiting and authentication
 📸 Enhanced OCR integration
 🌏 Multi-language support expansion
