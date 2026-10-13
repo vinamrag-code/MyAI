@@ -8,21 +8,21 @@ import os
 import json
 import logging
 import asyncio
-import httpx
 import re
 import sys
 from typing import Optional, List, Dict, Any
-from urllib.parse import urlencode
+from urllib.parse import urlparse
 from dotenv import load_dotenv
 from datetime import datetime
+
+from ddgs_search import search as ddgs_search
 
 load_dotenv()
 logger = logging.getLogger(__name__)
 
 # ── Env ────────────────────────────────────────────────────────────────────────
-SEARXNG_URL = os.getenv("SEARXNG_URL", "http://140.238.166.109:8081/search")
-SEARXNG_LANGUAGE = os.getenv("SEARXNG_LANGUAGE", "en")
-SEARXNG_CATEGORIES = os.getenv("SEARXNG_CATEGORIES", "general,news")
+DDGS_REGION = os.getenv("DDGS_REGION", "") or None
+DDGS_TIMELIMIT = os.getenv("DDGS_TIMELIMIT", "") or None  # d, w, m, y
 REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "12"))
 
 class FilteredAnswer:
@@ -139,49 +139,38 @@ class SearchAgent:
     """
 
     async def search(self, query: str, max_results: int = 20) -> List[SearchResult]:
-        """Search SearXNG and return ranked results"""
+        """Search DuckDuckGo (ddgs) and return ranked results"""
         logger.info(f"🔍 Searching for: '{query}'")
         
-        params = {
-            "q": query,
-            "format": "json",
-            "categories": SEARXNG_CATEGORIES,
-            "language": SEARXNG_LANGUAGE,
-        }
-
         try:
-            async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT) as client:
-                resp = await client.post(
-                    SEARXNG_URL,
-                    data=params,
-                    headers={"Content-Type": "application/x-www-form-urlencoded"},
-                )
-                resp.raise_for_status()
-                data = resp.json()
+            raw = await asyncio.wait_for(
+                asyncio.to_thread(
+                    ddgs_search, query, max_results=max_results,
+                    region=DDGS_REGION, timelimit=DDGS_TIMELIMIT,
+                ),
+                timeout=REQUEST_TIMEOUT,
+            )
 
-            # Parse and score results
-            all_results = data.get("results", [])
             processed_results = []
-            
-            for r in all_results[:max_results]:
+            for r in raw[:max_results]:
                 result = SearchResult(
-                    title=r.get("title", "No title"),
-                    content=r.get("content", "No content available"),
+                    title=r.get("title") or "No title",
+                    content=r.get("snippet") or "No content available",
                     url=r.get("url", ""),
-                    published=r.get("publishedDate", ""),
-                    source=r.get("source", r.get("engine", "Unknown"))
+                    published="",
+                    source=urlparse(r.get("url", "")).netloc or "Unknown",
                 )
                 result.calculate_relevance(query)
                 processed_results.append(result)
-            
+
             # Sort by relevance score
             processed_results.sort(key=lambda x: x.relevance_score, reverse=True)
             
             logger.info(f"✅ Found {len(processed_results)} results")
             return processed_results
 
-        except httpx.TimeoutException:
-            logger.error(f"⏰ SearXNG timed out after {REQUEST_TIMEOUT}s")
+        except asyncio.TimeoutError:
+            logger.error(f"⏰ DDGS search timed out after {REQUEST_TIMEOUT}s")
             return []
         except Exception as e:
             logger.error(f"❌ Search error: {e}")

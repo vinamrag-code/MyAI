@@ -44,7 +44,7 @@ def safe_str(value, default=""):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("🚀 MyAI Server starting")
-    logger.info(f"  SearXNG URL: {config.searxng_url}")
+    logger.info("  Search backend: DDGS (DuckDuckGo)")
     
     await ai_client.initialize()
     
@@ -120,7 +120,7 @@ def health():
     return {
         "status": "ok",
         "timestamp": datetime.now().isoformat(),
-        "searxng_configured": bool(config.searxng_url),
+        "search_backend": "ddgs",
         "models_available": len(ai_client.models)
     }
 

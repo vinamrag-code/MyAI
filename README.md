@@ -6,7 +6,7 @@ MyAI is an advanced personal AI assistant that combines conversational AI capabi
 ✨ Key Features
 
 🧠 Multi-Model AI Chat: Utilizes a fallback system across multiple free AI models (OpenRouter, Hermes, etc.) to ensure high availability and reliability
-🔍 Web Search Integration: Real-time searchNG backend with smart filtering and answer extraction
+🔍 Web Search Integration: Real-time DuckDuckGo (ddgs) search with smart filtering and answer extraction
 💾 Conversational Memory: Maintains conversation history per user with configurable timeout and length limits
 🎯 Smart Answer Filtering: Ranks and extracts the most relevant answers from search results
 📷 OCR Context Support: Allows users to provide image text context for enhanced responses
@@ -26,7 +26,7 @@ MyAI is an advanced personal AI assistant that combines conversational AI capabi
 
 🐍 Python 3.11+
 ⚡ FastAPI & Uvicorn
-🔎 SearXNG (for web search)
+🔎 DDGS / DuckDuckGo (for web search)
 🌐 Multiple AI APIs (OpenRouter, Hermes, etc.)
 💻 HTML/CSS/JavaScript (frontend)
 
@@ -54,9 +54,6 @@ API Documentation available at: http://localhost:8000/docs
 
 🔑 Environment Variables
 
-Required:
-🌐 SEARXNG_URL: URL of your SearXNG instance
-
 Optional (Free models work without these):
 🔑 GROQ_API_KEY: Groq API key
 🔑 OPENROUTER_API_KEY: OpenRouter API key
@@ -64,8 +61,8 @@ Optional (Free models work without these):
 🔑 HERMES_API_KEY: Hermes API key (default: "choose-any-value")
 
 Configuration:
-🌍 SEARXNG_LANGUAGE: Search language (default: "en")
-📂 SEARXNG_CATEGORIES: Search categories (default: "general,news")
+🌍 DDGS_REGION: Search region, e.g. us-en, uk-en (default: none)
+🕒 DDGS_TIMELIMIT: d, w, m or y (default: none)
 ⏱️ REQUEST_TIMEOUT: Request timeout in seconds (default: 12)
 ❄️ COOLDOWN_PERIOD: Model cooldown period (default: 300)
 🚪 PORT: Server port (default: 8000)
@@ -129,11 +126,11 @@ pytest tests/test_agent.py
 
 Common Issues
 
-❌ SearXNG Connection Failed
-# Check if SearXNG is running
-curl http://140.238.166.109:8081/search?q=test
+❌ Web Search Returns Nothing
+# Test the search module directly
+python ddgs_search.py "test" --no-scrape
 
-# Verify your SEARXNG_URL in .env
+# DuckDuckGo may be rate-limiting you; retry or set a proxy
 
 ❌ All AI Models Failed
 Check your API keys in .env
@@ -233,7 +230,7 @@ curl http://localhost:8000/stats
 📚 Additional Resources
 
 📖 FastAPI Documentation: https://fastapi.tiangolo.com/
-🔍 SearXNG Documentation: https://docs.searxng.org/
+🔍 ddgs Package: https://pypi.org/project/ddgs/
 🤖 OpenRouter API Docs: https://openrouter.ai/docs
 📦 Python AsyncIO Guide: https://docs.python.org/3/library/asyncio.html
 
@@ -281,7 +278,7 @@ This project is open source and available under the MIT License.
 🙏 Acknowledgments
 
 🙌 Thanks to all the open-source AI model providers
-🎉 Special thanks to the SearXNG community
+🎉 Special thanks to the ddgs / DuckDuckGo community
 💖 Built with ❤️ by the MyAI team
 
 Ready to Get Started? 🎉

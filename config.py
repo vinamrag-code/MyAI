@@ -6,10 +6,9 @@ load_dotenv()
 
 class Config:
     def __init__(self):
-        # SearXNG Config
-        self.searxng_url = os.getenv("SEARXNG_URL", "http://140.238.166.109:8081/search")
-        self.searxng_language = os.getenv("SEARXNG_LANGUAGE", "en")
-        self.searxng_categories = os.getenv("SEARXNG_CATEGORIES", "general,news")
+        # Search Config (DDGS)
+        self.ddgs_region = os.getenv("DDGS_REGION", "")
+        self.ddgs_timelimit = os.getenv("DDGS_TIMELIMIT", "")
         self.request_timeout = int(os.getenv("REQUEST_TIMEOUT", "12"))
         
         # API Keys
